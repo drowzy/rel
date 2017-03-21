@@ -1,0 +1,4 @@
+PKG core
+PKG core_extended
+S src
+B _build/src
