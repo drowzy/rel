@@ -35,33 +35,43 @@ let next_version ver =
   in
   tick_version ver current_version
 
-let add =
-  Command.basic
-    ~summary: "Add [days] to the [base] date and print day"
+let major =
+  Command.basic ~summary:"Major version"
     Command.Spec.(
       empty
-      +> anon ("base" %: date)
-      +> anon ("days" %: int)
+      +> flag "-m" (optional string) ~doc:"string message"
     )
-    (fun base span () ->
-       Date.add_days base span
-       |> Date.to_string
-       |> print_endline
+    (fun message () ->
+       match message with
+       | Some buf -> printf "message %s" buf
+       | None -> printf "no message"
     )
 
-let diff =
-  Command.basic ~summary:"Shows days between [date1] and [date2]"
+let minor =
+  Command.basic ~summary:"Minor version"
     Command.Spec.(
       empty
-      +> anon ("date1" %: date)
-      +> anon ("date2" %: date)
+      +> flag "-m" (optional string) ~doc:"string message"
     )
-    (fun date1 date2 () ->
-       Date.diff date1 date2
-       |> printf "%d days\n"
+    (fun message () ->
+       match message with
+       | Some buf -> printf "message %s" buf
+       | None -> printf "no message"
+    )
+
+let patch =
+  Command.basic ~summary:"Patch version"
+    Command.Spec.(
+      empty
+      +> flag "-m" (optional string) ~doc:"string message"
+    )
+    (fun message () ->
+       match message with
+       | Some buf -> printf "message %s" buf
+       | None -> printf "no message"
     )
 
 let command =
-  Command.group ~summary: "Manipulate dates" [ "add", add; "diff", diff ]
+  Command.group ~summary: "Creates a semantic git tag" [ "major", major; "minor", minor; "patch", patch ]
 
 let () = Command.run command
