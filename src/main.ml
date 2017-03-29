@@ -1,53 +1,15 @@
 open Core.Std
-open Core_extended.Std
-
-type tag = {
-  major: int;
-  minor: int;
-  patch: int;
-}
-
-type sem_ver = | Major | Minor | Patch
-
-let tag_to_string {major; minor; patch;} =
-  Printf.sprintf "%d.%d.%d" major minor patch
-
-let list_tags () =
-  Shell.run_one ~expect:[0;128] "git" ["describe"; "--abbrev=0"]
-
-let git_tag message tag =
-  let opts = ["tag"; "-a"; tag_to_string tag; "-m " ^ message;] in
-  match Shell.run_one ~expect:[0] "git" opts with
-    _ -> tag
-
-let create_tag sep_tag =
-  match List.map ~f:int_of_string (String.split ~on: '.' sep_tag) with
-  | [major; minor; patch] -> { major = major; minor = minor; patch = patch; }
-  | _ -> { major = 0; minor = 0; patch = 0; }
-
-let determine_current_version tag =
-  match tag with
-  | None -> "0.0.0"
-  | Some t -> t
-
-let tick_version ver t =
-  match ver with
-  | Patch -> { t with patch = t.patch + 1; }
-  | Minor -> { t with minor = t.minor + 1; patch = 0; }
-  | Major -> { major = t.major + 1; minor = 0; patch = 0; }
+open Core_kernel.Fn
 
 let next_version version message =
   let msg = match message with
     | Some buf -> buf
     | None -> "version bump"
   in
-  let current_version = list_tags ()
-                        |> determine_current_version
-                        |> create_tag
-  in
-  tick_version version current_version
-  |> git_tag msg
-  |> tag_to_string
+  Tag.list_tags ()
+  |> Tag.bump version
+  |> flip Tag.git_tag msg
+  |> Tag.to_string
 
 let major =
   Command.basic ~summary:"Major version"
@@ -56,7 +18,7 @@ let major =
       +> flag "-m" (optional string) ~doc:"string message"
     )
     (fun message () ->
-       next_version Minor message
+       next_version Tag.Major message
        |> printf "%s created"
     )
 
@@ -67,7 +29,7 @@ let minor =
       +> flag "-m" (optional string) ~doc:"string message"
     )
     (fun message () ->
-       next_version Minor message
+       next_version Tag.Minor message
        |> printf "%s created"
     )
 
@@ -78,7 +40,7 @@ let patch =
       +> flag "-m" (optional string) ~doc:"string message"
     )
     (fun message () ->
-       next_version Patch message
+       next_version Tag.Patch message
        |> printf "%s created"
     )
 
