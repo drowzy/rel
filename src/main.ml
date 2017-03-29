@@ -11,33 +11,23 @@ let next_version version message =
   |> flip Tag.git_tag msg
   |> Tag.to_string
 
-let msg_flag = Command.Spec.(empty +> flag "-m" (optional string) ~doc:"string message")
+let common =
+  Command.Spec.(
+    empty
+    +> flag "-m" (optional string) ~doc:"string message"
+  )
 
-let major =
-  Command.basic ~summary:"Major version"
-    msg_flag
-    (fun message () ->
-       next_version Tag.Major message
-       |> printf "%s created"
-    )
+let run version = (fun message () ->
+    next_version version message
+    |> printf "%s created"
+  )
 
-let minor =
-  Command.basic ~summary:"Minor version"
-    msg_flag
-    (fun message () ->
-       next_version Tag.Minor message
-       |> printf "%s created"
-    )
-
-let patch =
-  Command.basic ~summary:"Patch version"
-    msg_flag
-    (fun message () ->
-       next_version Tag.Patch message
-       |> printf "%s created"
-    )
+let major = Command.basic ~summary:"Major version" common (run Tag.Major)
+let minor = Command.basic ~summary:"Minor version" common (run Tag.Minor)
+let patch = Command.basic ~summary:"Patch version" common (run Tag.Patch)
 
 let command =
-  Command.group ~summary: "Creates a semantic git tag" [ "major", major; "minor", minor; "patch", patch ]
+  Command.group ~summary: "Creates a semantic git tag"
+    [ "major", major; "minor", minor; "patch", patch ]
 
 let () = Command.run command
