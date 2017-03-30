@@ -1,16 +1,42 @@
 open Core.Std
 open Core_extended.Std
 
-type t = { major: int; minor: int; patch: int;}
-type version = Major | Minor | Patch
+type t = {
+  major: int;
+  minor: int;
+  patch: int;
+  ext: string
+}
+type ext =
+  | Pre of string
+  | Regular
+type version =
+  | Major of ext
+  | Minor of ext
+  | Patch of ext
 
 let from_string str =
-  match List.map ~f:int_of_string (String.split ~on: '.' str) with
-  | [major; minor; patch] -> { major = major; minor = minor; patch = patch; }
-  | _ -> { major = 0; minor = 0; patch = 0; }
+  match String.split ~on: '.' str with
+  | [major; minor; patch;] -> {
+      major = int_of_string major;
+      minor = int_of_string minor;
+      patch = int_of_string patch;
+      ext = ""
+    }
+  | [major; minor; patch; ext;] -> {
+      major = int_of_string major;
+      minor = int_of_string minor;
+      patch = int_of_string patch;
+      ext = ext
+    }
+  | _ -> { major = 0; minor = 0; patch = 0; ext = ""}
 
-let to_string {major; minor; patch;} =
-  Printf.sprintf "%d.%d.%d" major minor patch
+let to_string {major; minor; patch; ext;} =
+  Printf.sprintf "%d.%d.%d%s" major minor patch ext
+
+let ext_to_string = function
+  | Pre s -> s
+  | Regular -> ""
 
 let list_tags () =
   let curr = match Shell.run_one ~expect:[0;128] "git" ["describe"; "--abbrev=0"] with
@@ -21,9 +47,12 @@ let list_tags () =
 
 let bump ver tag =
   match ver with
-  | Patch -> { tag with patch = tag.patch + 1; }
-  | Minor -> { tag with minor = tag.minor + 1; patch = 0; }
-  | Major -> { major = tag.major + 1; minor = 0; patch = 0; }
+  | Patch p -> let ext = ext_to_string p in
+    { tag with patch = tag.patch + 1; ext}
+  | Minor p -> let ext = ext_to_string p in
+    { tag with minor = tag.minor + 1; patch = 0; ext; }
+  | Major p -> let ext = ext_to_string p in
+    { major = tag.major + 1; minor = 0; patch = 0; ext; }
 
 let git_tag tag message =
   let opts = ["tag"; "-a"; to_string tag; "-m " ^ message;] in

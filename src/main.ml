@@ -22,9 +22,9 @@ let run version = (fun message () ->
     |> printf "%s created"
   )
 
-let major = Command.basic ~summary:"Major version" common (run Tag.Major)
-let minor = Command.basic ~summary:"Minor version" common (run Tag.Minor)
-let patch = Command.basic ~summary:"Patch version" common (run Tag.Patch)
+let major = Command.basic ~summary:"Major version" common (run (Tag.Major Tag.Regular))
+let minor = Command.basic ~summary:"Minor version" common (run (Tag.Minor Tag.Regular))
+let patch = Command.basic ~summary:"Patch version" common (run (Tag.Patch Tag.Regular))
 
 let command =
   Command.group ~summary: "Creates a semantic git tag"
