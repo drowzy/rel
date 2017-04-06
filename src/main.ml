@@ -33,8 +33,8 @@ let pre_major =
   Command.basic
     ~summary:"Pre-major version"
     ext_cmd
-    (fun message ext () ->
-     let prefix = match ext with
+    (fun pre message () ->
+     let prefix = match pre with
        | Some buf -> Tag.Pre buf
        | None -> Tag.Regular
      in
