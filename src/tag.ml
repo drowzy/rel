@@ -32,7 +32,7 @@ let from_string str =
   | _ -> { major = 0; minor = 0; patch = 0; ext = ""}
 
 let to_string {major; minor; patch; ext;} =
-  Printf.sprintf "%d.%d.%d%s" major minor patch ext
+  Printf.sprintf "%d.%d.%d%-s" major minor patch ext
 
 let ext_to_string = function
   | Pre s -> s
