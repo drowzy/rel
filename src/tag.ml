@@ -16,7 +16,7 @@ type version =
   | Patch of ext
 
 let from_string str =
-  match String.split ~on: '.' str with
+  match String.split_on_chars ~on: ['.'; '-';] str with
   | [major; minor; patch;] -> {
       major = int_of_string major;
       minor = int_of_string minor;
